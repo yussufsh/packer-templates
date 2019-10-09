@@ -16,6 +16,10 @@ variables:
   openstack_key_path: "{{ env `OS_SSH_KEY_PATH`}}"
   openstack_key_name: "{{ env `OS_SSH_KEY` }}"
 builders:
+- type: lxd
+  name: lxd
+  image: ubuntu:16.04
+  output_image: ubuntu-16.04-sardonyx
 - type: googlecompute
   name: googlecompute
   communicator: ssh
@@ -83,9 +87,8 @@ provisioners:
   pause_before: 5s
   only:
   - docker
-- type: file
-  source: tmp/git-meta
-  destination: /var/tmp/git-meta
+- type: shell
+  inline: mkdir -p /var/tmp/git-meta
 - type: file
   source: packer-assets/ubuntu-xenial-normal-purge.txt
   destination: /var/tmp/purge.txt
@@ -93,6 +96,7 @@ provisioners:
   source: packer-assets/ubuntu-xenial-ci-sardonyx-packages.txt
   destination: /var/tmp/packages.txt
   only:
+  - lxd
   - googlecompute
   - openstack
 - type: file
@@ -109,6 +113,7 @@ provisioners:
   - packer-scripts/remove-default-users
   execute_command: "{{ .Vars }} exec sudo -E -S bash '{{ .Path }}'"
   only:
+  - lxd
   - docker
   - googlecompute
 - type: shell
